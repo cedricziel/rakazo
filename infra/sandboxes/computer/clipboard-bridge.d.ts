@@ -88,6 +88,7 @@ export function attachRemoteClipboardCopy(
   rfb: EventTargetLike | null | undefined,
   options?: {
     clipboard?: { writeText?: (text: string) => Promise<void> } | null;
+    parent?: { postMessage: (message: unknown, targetOrigin: string) => void } | null;
   },
 ): () => void;
 

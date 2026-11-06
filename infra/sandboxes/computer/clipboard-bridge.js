@@ -144,19 +144,29 @@ export function attachMobilePaste(rfb, options = {}) {
 /**
  * Sandbox → host copy: Debian noVNC 1.3 dispatches a "clipboard" CustomEvent
  * with detail.text when x11vnc reports a remote CLIPBOARD change
- * (ServerCutText). navigator.clipboard.writeText needs a secure context and
- * can be denied without a gesture, so failures are silent.
+ * (ServerCutText). A browser lets this focused frame write the clipboard
+ * itself. The desktop app grants frames no clipboard access, so the text also
+ * goes to the embedding app, which writes it through the desktop bridge.
+ * navigator.clipboard.writeText needs a secure context and can be denied
+ * without a gesture, so failures are silent.
  * @param {{ addEventListener?: (type: string, listener: (event: object) => void) => void, removeEventListener?: (type: string, listener: (event: object) => void) => void } | null | undefined} rfb
- * @param {{ clipboard?: { writeText?: (text: string) => Promise<void> } | null }} [options]
+ * @param {{ clipboard?: { writeText?: (text: string) => Promise<void> } | null, parent?: { postMessage: (message: unknown, targetOrigin: string) => void } | null }} [options]
  * @returns {() => void} detach
  */
 export function attachRemoteClipboardCopy(rfb, options = {}) {
   const clipboard = options.clipboard ?? globalThis.navigator?.clipboard;
+  const parent =
+    options.parent !== undefined
+      ? options.parent
+      : globalThis.parent && globalThis.parent !== globalThis
+        ? globalThis.parent
+        : null;
   if (typeof rfb?.addEventListener !== "function") return () => {};
-  if (!clipboard || typeof clipboard.writeText !== "function") return () => {};
   const onClipboard = async (event) => {
     const text = event?.detail?.text;
     if (typeof text !== "string") return;
+    parent?.postMessage({ rakazoClipboard: text }, "*");
+    if (typeof clipboard?.writeText !== "function") return;
     try {
       await clipboard.writeText(text);
     } catch {

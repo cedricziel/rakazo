@@ -347,7 +347,7 @@ describe("remote clipboard copy", () => {
   it("writes remote cut text to the host clipboard", () => {
     const { rfb, listeners } = rfbTarget();
     const writeText = vi.fn(async (_text: string) => {});
-    const detach = attachRemoteClipboardCopy(rfb, { clipboard: { writeText } });
+    const detach = attachRemoteClipboardCopy(rfb, { clipboard: { writeText }, parent: null });
     listeners.get("clipboard")?.({ detail: { text: "otp-482991" } });
     expect(writeText).toHaveBeenCalledWith("otp-482991");
     detach();
@@ -363,11 +363,15 @@ describe("remote clipboard copy", () => {
     expect(writeText).not.toHaveBeenCalled();
   });
 
-  it("does not attach when the clipboard write API is missing", () => {
+  it("hands remote cut text to the embedding app", () => {
     const { rfb, listeners } = rfbTarget();
-    const detach = attachRemoteClipboardCopy(rfb, { clipboard: {} });
-    expect(listeners.size).toBe(0);
-    expect(() => detach()).not.toThrow();
+    const postMessage = vi.fn();
+    attachRemoteClipboardCopy(rfb, { clipboard: {}, parent: { postMessage } });
+    listeners.get("clipboard")?.({ detail: { text: "otp-482991" } });
+    expect(postMessage).toHaveBeenCalledWith({ rakazoClipboard: "otp-482991" }, "*");
+  });
+
+  it("does not attach without a screen", () => {
     expect(() =>
       attachRemoteClipboardCopy(null, { clipboard: { writeText: vi.fn() } }),
     ).not.toThrow();
