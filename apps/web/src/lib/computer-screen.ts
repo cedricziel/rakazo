@@ -136,6 +136,13 @@ export function screenFrameMessage(data: unknown): ScreenFrameMessage | null {
   return { rakazoScreen: rakazoScreen as ScreenFrameState, ...(text ? { detail: text } : {}) };
 }
 
+/** Text the screen copied on the remote desktop, or null for any other message. */
+export function screenClipboardText(data: unknown): string | null {
+  if (!data || typeof data !== "object") return null;
+  const { rakazoClipboard } = data as Record<string, unknown>;
+  return typeof rakazoClipboard === "string" ? rakazoClipboard : null;
+}
+
 /** Whether a report shows the page got past loading; a page stalled there is still silent. */
 export function screenFrameStarted(message: ScreenFrameMessage): boolean {
   return message.rakazoScreen !== "loading";

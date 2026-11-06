@@ -8,6 +8,7 @@ import {
   probeScreen,
   probeScreenStatus,
   sameEmbeddedComputerScreen,
+  screenClipboardText,
   screenFrameError,
   screenFrameMessage,
   screenFrameStarted,
@@ -261,6 +262,14 @@ describe("screen frame reports", () => {
     expect(screenFrameMessage({ rakazoScreen: "exploded" })).toBeNull();
     expect(screenFrameMessage("connected")).toBeNull();
     expect(screenFrameMessage(null)).toBeNull();
+  });
+
+  it("reads text the screen copied", () => {
+    expect(screenClipboardText({ rakazoClipboard: "copied" })).toBe("copied");
+    expect(screenClipboardText({ rakazoClipboard: "" })).toBe("");
+    expect(screenClipboardText({ rakazoClipboard: 5 })).toBeNull();
+    expect(screenClipboardText({ rakazoScreen: "connected" })).toBeNull();
+    expect(screenClipboardText(null)).toBeNull();
   });
 
   it("counts only reports past loading as a started page", () => {

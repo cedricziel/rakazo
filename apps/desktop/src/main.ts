@@ -16,6 +16,7 @@ import type { Session } from "electron";
 import {
   app,
   BrowserWindow,
+  clipboard,
   desktopCapturer,
   dialog,
   ipcMain,
@@ -37,6 +38,7 @@ import type { ElectronAutoUpdater } from "./auto-update.js";
 import { DesktopUpdateController, LAUNCH_CHECK_DELAY_MS, updaterSupport } from "./auto-update.js";
 import { createBadgeHandler } from "./badge.js";
 import { openBrowserAuth } from "./browser-auth.js";
+import { createClipboardHandler } from "./clipboard.js";
 import { DOCKER_INSTALL_LINKS, isDesktopSetupLink, runDocker } from "./docker-cli.js";
 import { prepareHostComputer } from "./host-computer.js";
 import {
@@ -1591,6 +1593,10 @@ app.whenReady().then(async () => {
   ipcMain.handle(
     "desktop.badge.set",
     createBadgeHandler(permissionTarget, (count) => app.setBadgeCount(count)),
+  );
+  ipcMain.handle(
+    "desktop.clipboard.writeText",
+    createClipboardHandler(permissionTarget, (text) => clipboard.writeText(text)),
   );
   if (process.platform === "darwin") {
     // Installed builds ship the helper as an extra resource; `pnpm build` compiles it for development.

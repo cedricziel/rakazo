@@ -396,3 +396,29 @@ it("closes the computer view on Escape, but not on the Escape that ends an IME c
   await press();
   expect(state.computerOpen).toBe(false);
 });
+
+it("copies screen text through the desktop app only while the screen has focus", async () => {
+  const writeText = vi.fn(async () => true);
+  vi.stubGlobal("rakazoDesktop", { platform: "darwin", clipboard: { writeText } });
+  await read();
+  const frame = container.querySelector("iframe");
+  const copy = async (text: string) => {
+    await act(async () => {
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data: { rakazoClipboard: text },
+          source: frame?.contentWindow,
+        }),
+      );
+    });
+  };
+  await copy("unfocused");
+  frame?.focus();
+  await copy("focused");
+  await act(async () => {
+    window.dispatchEvent(
+      new MessageEvent("message", { data: { rakazoClipboard: "elsewhere" }, source: window }),
+    );
+  });
+  expect(writeText.mock.calls).toEqual([["focused"]]);
+});

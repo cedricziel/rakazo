@@ -81,6 +81,10 @@ export interface RakazoDesktop {
   badge?: {
     set: (count: number) => Promise<boolean>;
   };
+  /** Absent on older desktop releases. Write-only: framed screens copy out through the page. */
+  clipboard?: {
+    writeText: (text: string) => Promise<boolean>;
+  };
   computer?: {
     /** Native main persists host choice through its local capability, never a user session. */
     managesHostChoice?: boolean;

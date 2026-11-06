@@ -28,10 +28,12 @@ import {
   probeScreenStatus,
   SCREEN_FRAME_LOAD_TIMEOUT_MS,
   sameEmbeddedComputerScreen,
+  screenClipboardText,
   screenFrameError,
   screenFrameMessage,
   screenFrameStarted,
 } from "../../lib/computer-screen";
+import { desktopBridge } from "../../lib/desktop";
 import type { Panel } from "../../lib/right-panel-state";
 import type { createSpaceRpc } from "../../lib/rpc";
 import {
@@ -163,6 +165,14 @@ export function useComputerState({
     const stopped = new AbortController();
     const onMessage = (event: MessageEvent) => {
       if (event.source !== screenFrame.contentWindow) return;
+      const copied = screenClipboardText(event.data);
+      if (copied !== null) {
+        // The desktop app gives frames no clipboard access. Like a browser, copy out only while
+        // the user is on the screen.
+        if (document.activeElement === screenFrame)
+          void desktopBridge()?.clipboard?.writeText(copied);
+        return;
+      }
       const message = screenFrameMessage(event.data);
       if (!message) return;
       if (screenFrameStarted(message)) screenFrameReported.current = true;
